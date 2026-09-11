@@ -73,9 +73,8 @@ def parse_monitored_tables(html: str) -> list[dict]:
             break
 
     if heading is None:
-        raise RuntimeError(
-            f"Could not find heading: {HEADING!r}"
-        )
+        # TOAS omits this section entirely when no flats are available.
+        return []
 
     tables = []
     current = heading.find_next("table")
@@ -84,11 +83,6 @@ def parse_monitored_tables(html: str) -> list[dict]:
         tables.append(parse_table(current))
 
         current = current.find_next("table")
-
-    if len(tables) != 2:
-        raise RuntimeError(
-            f"Expected 2 tables after {HEADING!r}, found {len(tables)}"
-        )
 
     return tables
 
@@ -217,6 +211,10 @@ def format_state(state: dict) -> str:
         f"URL: {URL}",
         "",
     ]
+
+    if not state["tables"]:
+        parts.append("No flats available.")
+        return "\n".join(parts).strip()
 
     for number, table in enumerate(state["tables"], start=1):
         parts.append(format_table(table, number))
