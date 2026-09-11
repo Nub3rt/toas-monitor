@@ -219,7 +219,7 @@ def format_state(state: dict) -> str:
     return "\n".join(parts).strip()
 
 
-def send_telegram(message: str, silent: bool = False) -> None:
+def send_telegram(message: str) -> None:
     if not TELEGRAM_BOT_TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
 
@@ -236,7 +236,6 @@ def send_telegram(message: str, silent: bool = False) -> None:
         json={
             "chat_id": TELEGRAM_CHAT_ID,
             "text": message,
-            "disable_notification": silent,
             "disable_web_page_preview": True,
         },
         timeout=30,
@@ -300,7 +299,7 @@ def main() -> int:
     print(f"Changed:       {changed}")
     print(f"Mikontalo:     {mikontalo_present}")
 
-    # 6. Send a normal alert for changes and a silent status otherwise.
+    # 6. Send Telegram alerts only when monitored content changes.
     if changed:
         message = "TOAS ALERT — monitored content changed"
         if mikontalo_present:
@@ -312,9 +311,7 @@ def main() -> int:
         message = "TOAS monitor ran successfully; no changes found."
         if mikontalo_present:
             message += " Mikontalo is present."
-
-        send_telegram(message, silent=True)
-        print("Sent no-change status.")
+        print(message)
 
     # 8. Save current state for the next execution.
     save_state_hash(current_hash)
