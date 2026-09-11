@@ -16,7 +16,6 @@ STATE_FILE = "state.json"
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-TELEGRAM_USERNAME = "@nub3rt"
 
 def normalize_text(value: str) -> str:
     """
@@ -220,7 +219,7 @@ def format_state(state: dict) -> str:
     return "\n".join(parts).strip()
 
 
-def send_telegram(message: str) -> None:
+def send_telegram(message: str, silent: bool = False) -> None:
     if not TELEGRAM_BOT_TOKEN:
         raise RuntimeError("TELEGRAM_BOT_TOKEN is not configured")
 
@@ -237,6 +236,7 @@ def send_telegram(message: str) -> None:
         json={
             "chat_id": TELEGRAM_CHAT_ID,
             "text": message,
+            "disable_notification": silent,
             "disable_web_page_preview": True,
         },
         timeout=30,
@@ -300,24 +300,20 @@ def main() -> int:
     print(f"Changed:       {changed}")
     print(f"Mikontalo:     {mikontalo_present}")
 
-    # 6. Send exactly one message for every successful run.
-    if changed or mikontalo_present:
-        reasons = []
-
-        if changed:
-            reasons.append("monitored content changed")
+    # 6. Send a normal alert for changes and a silent status otherwise.
+    if changed:
+        message = "TOAS ALERT — monitored content changed"
         if mikontalo_present:
-            reasons.append("Mikontalo is present")
-
-        message = (
-            f"{TELEGRAM_USERNAME} TOAS ALERT — "
-            f"{' and '.join(reasons)}\n\n"
-            f"{format_state(state)}"
-        )
+            message += "; Mikontalo is present"
+        message += f"\n\n{format_state(state)}"
         send_telegram(message)
         print("Sent alert notification.")
     else:
-        send_telegram("TOAS monitor ran successfully; no changes found.")
+        message = "TOAS monitor ran successfully; no changes found."
+        if mikontalo_present:
+            message += " Mikontalo is present."
+
+        send_telegram(message, silent=True)
         print("Sent no-change status.")
 
     # 8. Save current state for the next execution.
