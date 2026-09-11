@@ -16,6 +16,7 @@ STATE_FILE = "state.json"
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
+TELEGRAM_USERNAME = "@nub3rt"
 
 def normalize_text(value: str) -> str:
     """
@@ -299,25 +300,25 @@ def main() -> int:
     print(f"Changed:       {changed}")
     print(f"Mikontalo:     {mikontalo_present}")
 
-    # 6. Send notification if the monitored contents changed.
-    if changed:
+    # 6. Send exactly one message for every successful run.
+    if changed or mikontalo_present:
+        reasons = []
+
+        if changed:
+            reasons.append("monitored content changed")
+        if mikontalo_present:
+            reasons.append("Mikontalo is present")
+
         message = (
-            "TOAS ALERT — monitored content changed\n\n"
+            f"{TELEGRAM_USERNAME} TOAS ALERT — "
+            f"{' and '.join(reasons)}\n\n"
             f"{format_state(state)}"
         )
-
         send_telegram(message)
-        print("Sent change notification.")
-
-        # 7. Send a notification if Mikontalo exists.
-        if mikontalo_present:
-            message = (
-                "TOAS ALERT — MIKONTALO IS PRESENT\n\n"
-                f"{format_state(state)}"
-            )
-    
-            send_telegram(message)
-            print("Sent Mikontalo notification.")
+        print("Sent alert notification.")
+    else:
+        send_telegram("TOAS monitor ran successfully; no changes found.")
+        print("Sent no-change status.")
 
     # 8. Save current state for the next execution.
     save_state_hash(current_hash)
