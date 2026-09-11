@@ -12,14 +12,10 @@ from bs4 import BeautifulSoup
 
 URL = "https://toas.fi/en/quickly-available/"
 HEADING = "Tenancy agreement beginning immediately"
-STATE_VARIABLE = "TOAS_MONITOR_STATE"
+STATE_FILE = "state.json"
 
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
-
-GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN")
-GITHUB_REPOSITORY = os.environ.get("GITHUB_REPOSITORY")
-
 
 def normalize_text(value: str) -> str:
     """
@@ -248,78 +244,26 @@ def send_telegram(message: str) -> None:
     response.raise_for_status()
 
 
-def github_api(method: str, endpoint: str, **kwargs):
-    if not GITHUB_TOKEN:
-        raise RuntimeError("GITHUB_TOKEN is not configured")
-
-    response = requests.request(
-        method,
-        f"https://api.github.com{endpoint}",
-        headers={
-            "Authorization": f"Bearer {GITHUB_TOKEN}",
-            "Accept": "application/vnd.github+json",
-            "X-GitHub-Api-Version": "2026-03-10",
-        },
-        timeout=30,
-        **kwargs,
-    )
-
-    return response
-
-
 def get_previous_state_hash():
     """
-    Read TOAS_MONITOR_STATE from repository Actions variables.
-
-    The variable contains the hash of the previously observed state.
+    Read the hash from the local state file.
     """
-
-    owner, repo = GITHUB_REPOSITORY.split("/", 1)
-
-    response = github_api(
-        "GET",
-        f"/repos/{owner}/{repo}/actions/variables/{STATE_VARIABLE}",
-    )
-
-    if response.status_code == 404:
+    try:
+        with open(STATE_FILE, encoding="utf-8") as state_file:
+            data = json.load(state_file)
+    except FileNotFoundError:
         return None
 
-    response.raise_for_status()
-
-    data = response.json()
     return data.get("value")
 
 
 def save_state_hash(new_hash: str) -> None:
     """
-    Create or update the repository Actions variable.
+    Save the hash locally. GitHub Actions commits this file after the run.
     """
-
-    owner, repo = GITHUB_REPOSITORY.split("/", 1)
-
-    endpoint = (
-        f"/repos/{owner}/{repo}/actions/variables/{STATE_VARIABLE}"
-    )
-
-    payload = {
-        "name": STATE_VARIABLE,
-        "value": new_hash,
-    }
-
-    response = github_api(
-        "PATCH",
-        endpoint,
-        json=payload,
-    )
-
-    if response.status_code == 404:
-        response = github_api(
-            "POST",
-            f"/repos/{owner}/{repo}/actions/variables",
-            json=payload,
-        )
-
-    response.raise_for_status()
+    with open(STATE_FILE, "w", encoding="utf-8") as state_file:
+        json.dump({"value": new_hash}, state_file)
+        state_file.write("\n")
 
 
 def main() -> int:
