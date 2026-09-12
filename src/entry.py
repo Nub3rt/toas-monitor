@@ -40,10 +40,8 @@ async def fetch_page() -> str:
 
     response = await fetch(
         URL,
-        {
-            "headers": {
-                "User-Agent": USER_AGENT,
-            }
+        headers={
+            "User-Agent": USER_AGENT
         },
     )
 
@@ -276,19 +274,17 @@ async def send_telegram(
 
     response = await fetch(
         endpoint,
-        {
-            "method": "POST",
-            "headers": {
-                "Content-Type": "application/json",
-            },
-            "body": json.dumps(
-                {
-                    "chat_id": env.TELEGRAM_CHAT_ID,
-                    "text": message,
-                    "disable_web_page_preview": True,
-                }
-            ),
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
         },
+        body=json.dumps(
+            {
+                "chat_id": env.TELEGRAM_CHAT_ID,
+                "text": message,
+                "disable_web_page_preview": True,
+            }
+        ),
     )
 
     if not response.ok:
@@ -497,7 +493,7 @@ class Default(WorkerEntrypoint):
         """
 
         try:
-            await check_toas(env)
+            await check_toas(self.env)
 
         except Exception as error:
             print(
@@ -511,7 +507,7 @@ class Default(WorkerEntrypoint):
             # Notify Telegram, then re-raise so the
             # Cloudflare invocation is also recorded as failed.
             await send_error_notification(
-                env,
+                self.env,
                 error
             )
 
