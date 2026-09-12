@@ -5,6 +5,18 @@
 
   "main": "src/entry.py",
 
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true
+    },
+    "traces": {
+      "enabled": false
+    }
+  },
+
   "compatibility_date": "2026-09-12",
 
   "compatibility_flags": [
