@@ -2,8 +2,7 @@ import hashlib
 import json
 import re
 import traceback
-from datetime import datetime
-from zoneinfo import ZoneInfo
+from datetime import datetime, timezone
 from html import unescape
 
 from bs4 import BeautifulSoup
@@ -351,7 +350,7 @@ async def send_error_notification(
     """
 
     timestamp = (
-        datetime.now(ZoneInfo("Europe/Helsinki")).isoformat()
+        datetime.now(timezone.utc).isoformat()
     )
 
     message = (
@@ -388,7 +387,7 @@ async def check_toas(env) -> None:
     """
 
     now = (
-        datetime.now(ZoneInfo("Europe/Helsinki"))
+        datetime.now(timezone.utc)
     )
 
     print(f"Checking TOAS: {URL}")
@@ -496,8 +495,6 @@ class Default(WorkerEntrypoint):
         """
         Called by Cloudflare's Cron Trigger.
         """
-        print("TOAS monitor scheduled invocation")
-        return
 
         try:
             await check_toas(env)
