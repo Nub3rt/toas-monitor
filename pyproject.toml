@@ -1,0 +1,15 @@
+[project]
+name = "toas-monitor"
+version = "1.0.0"
+description = "Monitor TOAS quickly available apartments"
+requires-python = ">=3.13"
+
+dependencies = [
+    "beautifulsoup4==4.13.5"
+]
+
+[dependency-groups]
+dev = [
+    "workers-py",
+    "workers-runtime-sdk"
+]

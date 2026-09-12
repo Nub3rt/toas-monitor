@@ -1,0 +1,26 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+
+  "name": "toas-monitor",
+
+  "main": "src/entry.py",
+
+  "compatibility_date": "2026-09-12",
+
+  "compatibility_flags": [
+    "python_workers"
+  ],
+
+  "triggers": {
+    "crons": [
+      "*/5 * * * *"
+    ]
+  },
+
+  "kv_namespaces": [
+    {
+      "binding": "TOAS_STATE",
+      "id": "REPLACE_WITH_KV_NAMESPACE_ID"
+    }
+  ]
+}
