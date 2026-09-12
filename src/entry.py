@@ -496,6 +496,8 @@ class Default(WorkerEntrypoint):
         """
         Called by Cloudflare's Cron Trigger.
         """
+        print("TOAS monitor scheduled invocation")
+        return
 
         try:
             await check_toas(env)
