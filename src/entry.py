@@ -2,12 +2,12 @@ import hashlib
 import json
 import re
 import traceback
-from datetime import datetime, timezone
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from html import unescape
 
 from bs4 import BeautifulSoup
-from js import fetch
-from workers import WorkerEntrypoint
+from workers import WorkerEntrypoint, fetch
 
 
 URL = "https://toas.fi/en/quickly-available/"
@@ -351,9 +351,7 @@ async def send_error_notification(
     """
 
     timestamp = (
-        datetime.now(timezone.utc)
-        .astimezone()
-        .isoformat()
+        datetime.now(ZoneInfo("Europe/Helsinki")).isoformat()
     )
 
     message = (
@@ -390,8 +388,7 @@ async def check_toas(env) -> None:
     """
 
     now = (
-        datetime.now(timezone.utc)
-        .astimezone()
+        datetime.now(ZoneInfo("Europe/Helsinki"))
     )
 
     print(f"Checking TOAS: {URL}")
