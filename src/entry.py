@@ -197,21 +197,18 @@ def format_table(
     if not headers:
         return f"Table {table_number}: empty"
 
-    lines = [f"Table {table_number}:"]
+    lines = [f"\nTable {table_number}:"]
 
     if not rows:
         lines.append(
-            "  "
-            + " | ".join(headers)
+            " | ".join(headers)
             + " | [no apartments]"
         )
 
         return "\n".join(lines)
 
     for row in rows:
-        lines.append(
-            " " + " | ".join(row[:2])
-        )
+        lines.append(" | ".join(row[:2]))
 
     return "\n\n".join(lines)
 
