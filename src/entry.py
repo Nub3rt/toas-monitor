@@ -209,16 +209,8 @@ def format_table(
         return "\n".join(lines)
 
     for row in rows:
-        pairs = []
-
-        for header, value in list(zip(headers, row))[:2]:
-            if value:
-                pairs.append(
-                    f"{header}: {value}"
-                )
-
         lines.append(
-            "  " + " | ".join(pairs)
+            " " + " | ".join(row[:2])
         )
 
     return "\n\n".join(lines)
