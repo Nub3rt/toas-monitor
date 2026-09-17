@@ -211,7 +211,7 @@ def format_table(
     for row in rows:
         pairs = []
 
-        for header, value in zip(headers, row):
+        for header, value in list(zip(headers, row))[:2]:
             if value:
                 pairs.append(
                     f"{header}: {value}"
@@ -221,7 +221,7 @@ def format_table(
             "  " + " | ".join(pairs)
         )
 
-    return "\n".join(lines)
+    return "\n\n".join(lines)
 
 
 def format_state(state: dict) -> str:
