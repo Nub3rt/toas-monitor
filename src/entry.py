@@ -197,7 +197,7 @@ def format_table(
     if not headers:
         return f"Table {table_number}: empty"
 
-    lines = [f"\nTable {table_number}:"]
+    lines = [f"\nTable {table_number} ({len(rows)} listings):"]
 
     if not rows:
         lines.append(
