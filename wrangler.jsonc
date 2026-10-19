@@ -17,9 +17,9 @@
       "persist": true
     }
   },
-  "compatibility_date": "2026-09-12",
+  "compatibility_date": "2026-10-19",
   "triggers": {
-    "crons": ["*/5 5-14 * * mon-fri"]
+    "crons": ["*/2 * * * *"]
   },
   "kv_namespaces": [
     {
