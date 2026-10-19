@@ -28,6 +28,7 @@ export async function checkToas(env: Env, deps: MonitorDependencies = runtimeDep
   const tables = await deps.parseMonitoredTables(html);
   const state = buildState(tables);
   const currentHash = await stateHash(state);
+  console.log(`Apartment tables: ${tables.length}; listings: ${tables.reduce((sum, t) => sum + t.rows.length, 0)}`);
   const previousHash = await getPreviousStateHash(env);
   const changed = previousHash !== null && previousHash !== currentHash;
   const mikontaloPresent = containsMikontalo(state);
@@ -51,5 +52,5 @@ export async function checkToas(env: Env, deps: MonitorDependencies = runtimeDep
   }
 
   // The prior hash must survive HTTP, HTML-parsing, or Telegram failures.
-  await saveStateHash(env, currentHash);
+  await saveStateHash(env, currentHash, tables);
 }

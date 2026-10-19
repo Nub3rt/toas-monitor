@@ -1,4 +1,3 @@
-import { MONITORED_HEADING } from "./constants.ts";
 import type { TableData } from "./types.ts";
 
 export function normalizeText(value: string): string {
@@ -11,9 +10,7 @@ class TextCollector {
 
   add(chunk: Text): void {
     this.pending += chunk.text;
-    if (chunk.lastInTextNode) {
-      this.flush();
-    }
+    if (chunk.lastInTextNode) this.flush();
   }
 
   finish(): string {
@@ -55,29 +52,23 @@ export function parseTableRows(rawRows: string[][]): TableData {
   };
 }
 
+export function isApartmentTable(table: TableData): boolean {
+  const headers = table.headers.map((header) => normalizeText(header).toLowerCase());
+  return (
+    headers.length >= 3 &&
+    headers.some((header) => /\b(location|address|property)\b/u.test(header)) &&
+    headers.some((header) => /\b(apartment|flat|room|type)\b/u.test(header)) &&
+    headers.some((header) => /\b(rent|month)\b|€/u.test(header))
+  );
+}
+
 export async function parseMonitoredTables(html: string): Promise<TableData[]> {
-  const parsedTables: TableData[] = [];
-  const headingStack: TextCollector[] = [];
+  const foundTables: TableData[] = [];
   const tableStack: TableCapture[] = [];
   const rowStack: RowCapture[] = [];
   const cellStack: TextCollector[] = [];
-  let foundHeading = false;
-
-  const headingHandler: HTMLRewriterElementContentHandlers = {
-    element(element) {
-      const collector = new TextCollector();
-      headingStack.push(collector);
-      element.onEndTag(() => {
-        headingStack.pop();
-        if (collector.finish().toLowerCase() === MONITORED_HEADING.toLowerCase()) {
-          foundHeading = true;
-        }
-      });
-    },
-    text(chunk) {
-      headingStack.at(-1)?.add(chunk);
-    },
-  };
+  const titleStack: TextCollector[] = [];
+  let title = "";
 
   const cellHandler: HTMLRewriterElementContentHandlers = {
     element(element) {
@@ -96,21 +87,26 @@ export async function parseMonitoredTables(html: string): Promise<TableData[]> {
     },
   };
 
-  // HTMLRewriter supports simple selectors; register each tag independently.
   const transformed = new HTMLRewriter()
-    .on("h1", headingHandler)
-    .on("h2", headingHandler)
-    .on("h3", headingHandler)
-    .on("h4", headingHandler)
+    .on("title", {
+      element(element) {
+        const collector = new TextCollector();
+        titleStack.push(collector);
+        element.onEndTag(() => {
+          title = collector.finish();
+          titleStack.pop();
+        });
+      },
+      text(chunk) {
+        titleStack.at(-1)?.add(chunk);
+      },
+    })
     .on("table", {
       element(element) {
-        // Store a placeholder at the opening tag to preserve document order.
-        if (!foundHeading || parsedTables.length === 2) return;
         const table: TableCapture = { rawRows: [] };
-        const index = parsedTables.push({ headers: [], rows: [] }) - 1;
         tableStack.push(table);
         element.onEndTag(() => {
-          parsedTables[index] = parseTableRows(table.rawRows);
+          foundTables.push(parseTableRows(table.rawRows));
           tableStack.pop();
         });
       },
@@ -123,9 +119,7 @@ export async function parseMonitoredTables(html: string): Promise<TableData[]> {
         rowStack.push(row);
         element.onEndTag(() => {
           rowStack.pop();
-          if (row.cells.some(Boolean)) {
-            row.table.rawRows.push(row.cells);
-          }
+          if (row.cells.some(Boolean)) row.table.rawRows.push(row.cells);
         });
       },
     })
@@ -133,7 +127,16 @@ export async function parseMonitoredTables(html: string): Promise<TableData[]> {
     .on("td", cellHandler)
     .transform(new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } }));
 
-  // HTMLRewriter is streaming/lazy: consume the response to run handlers.
+  // HTMLRewriter is lazy; consuming the transformed response runs the handlers.
   await transformed.text();
-  return parsedTables;
+
+  if (!title.toLowerCase().includes("quickly available") || !title.toLowerCase().includes("toas")) {
+    throw new Error(`Unexpected TOAS page title: ${JSON.stringify(title)}`);
+  }
+
+  const apartments = foundTables.filter(isApartmentTable);
+  if (foundTables.length > 0 && apartments.length === 0) {
+    throw new Error("Found HTML tables, but none matched the TOAS apartment listing columns");
+  }
+  return apartments;
 }

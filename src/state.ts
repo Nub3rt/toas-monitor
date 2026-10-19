@@ -39,6 +39,13 @@ export async function getPreviousStateHash(env: Env): Promise<string | null> {
   return value;
 }
 
-export async function saveStateHash(env: Env, hash: string): Promise<void> {
-  await env.TOAS_STATE.put(STATE_KEY, JSON.stringify({ value: hash }));
+export async function saveStateHash(env: Env, hash: string, tables: TableData[] = []): Promise<void> {
+  // Metadata is outside the hashed state and never triggers a false alert.
+  // Inspect TOAS_STATE -> state to check whether the scheduled Worker is alive.
+  await env.TOAS_STATE.put(STATE_KEY, JSON.stringify({
+    value: hash,
+    last_checked_at: new Date().toISOString(),
+    apartment_tables: tables.length,
+    listings: tables.reduce((total, table) => total + table.rows.length, 0),
+  }));
 }

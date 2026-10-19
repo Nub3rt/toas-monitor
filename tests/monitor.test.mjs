@@ -70,6 +70,9 @@ test('first successful run initializes KV silently', async () => {
   assert.equal(messages.length, 0);
   assert.equal(env.puts, 1);
   assert.equal(JSON.parse(env.saved.get(STATE_KEY)).value, await stateHash(buildState(sampleTables)));
+  assert.equal(JSON.parse(env.saved.get(STATE_KEY)).apartment_tables, 2);
+  assert.equal(JSON.parse(env.saved.get(STATE_KEY)).listings, 2);
+  assert.match(JSON.parse(env.saved.get(STATE_KEY)).last_checked_at, /^20\d\d-/);
 });
 
 test('unchanged state produces no alert even when Mikontalo is present', async () => {
