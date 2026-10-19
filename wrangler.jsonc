@@ -1,13 +1,9 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-
   "name": "toas-monitor",
-
-  "main": "src/entry.py",
-
+  "main": "src/index.ts",
   "workers_dev": false,
   "preview_urls": false,
-
   "observability": {
     "logs": {
       "enabled": true,
@@ -21,19 +17,10 @@
       "persist": true
     }
   },
-
   "compatibility_date": "2026-09-12",
-
-  "compatibility_flags": [
-    "python_workers"
-  ],
-
   "triggers": {
-    "crons": [
-      "*/5 5-14 * * mon-fri"
-    ]
+    "crons": ["*/5 5-14 * * mon-fri"]
   },
-
   "kv_namespaces": [
     {
       "binding": "TOAS_STATE",

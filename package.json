@@ -1,0 +1,21 @@
+{
+  "name": "toas-monitor",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "TOAS apartment availability monitor on Cloudflare Workers (TypeScript)",
+  "scripts": {
+    "dev": "wrangler dev --test-scheduled",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4",
+    "typescript": "^5.8.0",
+    "wrangler": "^4.0.0"
+  },
+  "engines": {
+    "node": ">=22.6.0"
+  }
+}
